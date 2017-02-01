@@ -110,6 +110,25 @@ public:
    */
   static void
   CalculateAllPossibleRoutes();
+    
+    /*
+     * @ZY, back up originalMetric for all edges, using in CalculateNoCommLinkMultiPathRoutes
+     */
+    static void
+    BackupRestoreOriginalMetrics(const std::string action);
+    /*
+     * @ZY, 2015-1-7 no common link multi-path algorithms PairFirst
+     */
+    static void
+    CalculateNoCommLinkMultiPathRoutesPairFirst();
+    /*
+     * @ZY, 2016-12-6 no common link multi-path algorithms PairFirst, but add reverse routes
+     *
+     */
+    static void
+    CalculateNoCommLinkMultiPathRoutesPairFirst(bool addReverseRoute);
+    
+
 
 private:
   void
