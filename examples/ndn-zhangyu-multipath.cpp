@@ -31,7 +31,6 @@
 #include <boost/lambda/bind.hpp>
 #include "ns3/ndnSIM/helper/ndn-link-control-helper.hpp"
 
-//ZhangYu 2014-2-7 for DynamicRouting，否则不认识Name，试了很多.h才知道要包含ndn-interest.h
 #include "ns3/names.h"
 #include "ns3/string.h"
 #include "ns3/ptr.h"

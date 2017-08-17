@@ -457,6 +457,10 @@ extractLpLocalFields(NetPkt& netPacket, const lp::Packet& lpPacket)
   if (lpPacket.has<lp::CongestionMarkField>()) {
     netPacket.setTag(make_shared<lp::CongestionMarkTag>(lpPacket.get<lp::CongestionMarkField>()));
   }
+
+  if (lpPacket.has<lp::HopCountTagField>()) {
+    netPacket.setTag(make_shared<lp::HopCountTag>(lpPacket.get<lp::HopCountTagField>() + 1));
+  }
 }
 
 void
