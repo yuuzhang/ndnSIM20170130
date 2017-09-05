@@ -27,7 +27,7 @@ def register_types(module):
     module.add_class('NodeContainer', import_from_module='ns.network')
     module.add_class('Node', import_from_module='ns.network', parent=module['ns3::Object'])
     module.add_class('ApplicationContainer', import_from_module='ns.network')
-
+    
     def reg_ndn(module):
         module.add_class('StackHelper')
         module.add_class('FibHelper')
@@ -69,6 +69,11 @@ def register_types(module):
 
         reg_nfd(module.add_cpp_namespace('nfd'))
     reg_ndn(module.add_cpp_namespace('ndn'))
+    
+    # ZhangYu 2017-9-4, refer to the same file in ubuntu 12.04, also can see from http://ndnsim.net/2.3/doxygen/classns3_1_1AnnotatedTopologyReader.html
+    # AnnotatedTopologyReader has the same level to "ndn",refer to scr/topology-read/modulegen_gcc_ILP32.py
+    module.add_class('TopologyReader',import_from_module='ns.topology_read')
+    module.add_class('AnnotatedTopologyReader', parent=module['ns3::TopologyReader'])
 
 def register_methods(root_module):
     reg_other_modules(root_module)
@@ -156,6 +161,7 @@ def register_methods(root_module):
         cls.add_method('AddOriginsForAll', 'void', [])
         cls.add_method('CalculateRoutes', 'void', [])
         cls.add_method('CalculateAllPossibleRoutes', 'void', [])
+        cls.add_method('CalculateNoCommLinkMultiPathRoutesPairFirst','void',[])
     reg_GlobalRoutingHelper(root_module['ns3::ndn::GlobalRoutingHelper'])
 
     def reg_Name(root_module, cls):
@@ -303,6 +309,13 @@ def reg_other_modules(root_module):
         cls.add_constructor([])
         cls.add_constructor([param('ns3::ApplicationContainer', 'container')])
     reg_ApplicationContainer(root_module['ns3::ApplicationContainer'])
+
+    # ZhangYu 2017-9-5 refer to same name file in Ubuntu1204 
+    def reg_AnnotatedTopologyReader(cls):
+         cls.add_constructor([param('std::string const &', 'path', default_value='""'), param('double', 'scale', default_value='1.0e+0')])
+         cls.add_method('SetFileName', 'void', [param('const std::string&', 'fileName')])
+         cls.add_method('Read', 'void', [])
+    reg_AnnotatedTopologyReader(root_module['ns3::AnnotatedTopologyReader'])
 
 def register_functions(root_module):
     return

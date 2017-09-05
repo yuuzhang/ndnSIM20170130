@@ -1,0 +1,44 @@
+# topo-6-node.txt
+
+#   /------\	                                                /------\
+#   | Src1 |<--+                                            +-->| Dst1 |
+#   \------/    \                                          /    \------/
+#            	 \                                        /     
+#                 +-->/------\   "bottleneck"  /------\<-+      
+#                     | Rtr1 |<===============>| Rtr2 |         
+#                 +-->\------/                 \------/<-+      
+#                /                                        \
+#   /------\    /                                          \    /------\
+#   | Src2 |<--+                                            +-->| Dst2 |
+#   \------/                                                    \------/
+
+router
+
+# node  comment     yPos    xPos  systemID
+Node0   NA          4       2	  0
+Node1   NA          3       1	  1
+Node2   NA          3       2	  2
+Node3   NA          3       3	  3
+Node4   NA          2       1	  4
+Node5   NA          2       2	  5
+Node6   NA          2       3	  6
+Node7   NA          1       2	  7
+
+link
+
+# srcNode   dstNode     bandwidth   metric  delay     queue
+Node0       Node1       6Mbps       400       80ms     10000
+Node0       Node2       7Mbps       360       90ms     10000
+Node0       Node3       8Mbps       350      110ms    10000
+Node1       Node4       4Mbps       520      450ms    10000
+Node1       Node5       2Mbps       700      400ms    10000
+Node1       Node6       3Mbps       500      550ms    10000
+Node2       Node4       3Mbps       500      600ms    10000
+Node2       Node5       5Mbps       520      500ms    10000
+Node2       Node6       2Mbps       650      450ms    10000
+Node3       Node4       2Mbps       700      400ms    10000
+Node3       Node5       4Mbps       480      600ms    10000
+Node3       Node6       5Mbps       560      450ms    10000
+Node4       Node7       8Mbps       200       60ms     10000
+Node5       Node7       9Mbps       160       40ms     10000
+Node6       Node7       8Mbps       200       80ms     10000

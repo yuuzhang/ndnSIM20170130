@@ -31,6 +31,7 @@
 #include <boost/lambda/bind.hpp>
 #include "ns3/ndnSIM/helper/ndn-link-control-helper.hpp"
 
+//ZhangYu 2014-2-7 for DynamicRouting，否则不认识Name，试了很多.h才知道要包含ndn-interest.h
 #include "ns3/names.h"
 #include "ns3/string.h"
 #include "ns3/ptr.h"
@@ -40,6 +41,7 @@
 #include <boost/lambda/bind.hpp>
 
 using namespace std;
+//2017-8-19 try python caculate routes and add to FIB manually
 
 //---ZhangYu
 
@@ -138,7 +140,9 @@ main (int argc, char *argv[])
 	  ndn::GlobalRoutingHelper::CalculateRoutes ();
 	}
 	else if(routingName.compare("MultiPathPairFirst")==0){
-		ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst();
+		//ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst();
+		//ndn::GlobalRoutingHelper::CalculateRoutes();
+		ndn::GlobalRoutingHelper::addRouteHop();
 	}
 	else if(routingName.compare("Flooding")==0){
 		ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes();

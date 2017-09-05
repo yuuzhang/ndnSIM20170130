@@ -114,20 +114,27 @@ public:
 	/*
 	 * @ZY, back up originalMetric for all edges, using in CalculateNoCommLinkMultiPathRoutes
 	 */
-	static void
-	BackupRestoreOriginalMetrics(const std::string action);
-	/*
-	 * @ZY, 2015-1-7 no common link multi-path algorithms PairFirst
-	 */
-	static void
-	CalculateNoCommLinkMultiPathRoutesPairFirst();
-	/*
-	 * @ZY, 2016-12-6 no common link multi-path algorithms PairFirst, but add reverse routes
-	 *
-	 */
-	static void
-	CalculateNoCommLinkMultiPathRoutesPairFirst(bool addReverseRoute);
-    
+  static void
+  BackupRestoreOriginalMetrics(const std::string action);
+  /*
+   * @ZY, 2015-1-7 no common link multi-path algorithms PairFirst
+   */
+  static void
+  CalculateNoCommLinkMultiPathRoutesPairFirst();
+  /*
+   * @ZY, 2016-12-6 no common link multi-path algorithms PairFirst, but add reverse routes
+   *
+   */
+  static void
+  CalculateNoCommLinkMultiPathRoutesPairFirst(bool addReverseRoute);
+
+/*
+ * @ZY, 2017-8-19 try to caculate routes by python, and use the python results in ns3 c++
+ * add next hop for a route
+ * 原本打算用scenarioHelper来实现，结果发现它自成体系，拓扑和节点都用自己的，所以放弃
+ */
+static void
+addRouteHop();
 
 
 private:

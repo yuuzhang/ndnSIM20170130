@@ -1,0 +1,24 @@
+router
+# node	comment	yPos	xPos	systemID
+Node0	NA	4	7	0	
+Node1	NA	2	8	1	
+Node2	NA	8	4	2	
+Node3	NA	6	9	3	
+Node4	NA	2	4	4	
+Node5	NA	3	6	5	
+Node6	NA	9	5	6	
+Node7	NA	3	1	7	
+Node8	NA	1	6	8
+
+link
+#srcNode	dstNode	bandwidth	metric	delay	queue	
+Node5	Node1	1Mbps	1	10ms	
+Node6	Node3	1Mbps	1	10ms	
+Node7	Node3	1Mbps	1	10ms	
+Node8	Node3	1Mbps	1	10ms	
+Node0	Node3	1Mbps	1	10ms	
+Node1	Node2	1Mbps	1	10ms	
+Node2	Node3	1Mbps	1	10ms	
+Node3	Node1	1Mbps	1	10ms	
+Node4	Node2	1Mbps	1	10ms	
+

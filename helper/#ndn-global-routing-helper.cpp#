@@ -30,7 +30,7 @@
 #include "model/ndn-net-device-transport.hpp"
 #include "model/ndn-global-router.hpp"
 
-#include "daemon/table/fib.hpp"
+#include "daemon/table/fib.hpp
 #include "daemon/fw/forwarder.hpp"
 #include "daemon/table/fib-entry.hpp"
 #include "daemon/table/fib-nexthop.hpp"
@@ -47,14 +47,6 @@
 #include "ns3/channel-list.h"
 #include "ns3/object-factory.h"
 
-#include <boost/lexical_cast.hpp>
-#include <boost/foreach.hpp>
-#include <boost/concept/assert.hpp>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
-#include <unordered_map>
-#include "boost-graph-ndn-global-routing-helper.hpp"
-#include <math.h>
-
 //ZhangYu 2016-12-2
 #include "ns3/application.h"
 #include "ns3/point-to-point-net-device.h"
@@ -65,7 +57,17 @@
 #include "ns3/string.h"
 
 //2017-8-19 try python caculate routes and add to FIB manually
-#include "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7/Python.h"
+
+#include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
+#include <boost/concept/assert.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+
+#include <unordered_map>
+
+#include "boost-graph-ndn-global-routing-helper.hpp"
+
+#include <math.h>
 
 NS_LOG_COMPONENT_DEFINE("ndn.GlobalRoutingHelper");
 
@@ -402,7 +404,6 @@ GlobalRoutingHelper::CalculateAllPossibleRoutes()
 void
 GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst()
 {
-	std::cout << "2017-9-4 call OK" << std::endl;
 	CalculateNoCommLinkMultiPathRoutesPairFirst(true);
 }
 /* ZhangYu 2016-12-1 为了和Matlab中的算法保持一致，搜索出一条路径后0->1->4后，添加路由0->1->4，设置其为Max-1
@@ -414,6 +415,7 @@ GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst(bool setReverse
 	BOOST_CONCEPT_ASSERT((boost::VertexListGraphConcept<boost::NdnGlobalRouterGraph>));
 	BOOST_CONCEPT_ASSERT((boost::IncidenceGraphConcept<boost::NdnGlobalRouterGraph>));
 	boost::NdnGlobalRouterGraph graph;
+	typedef boost::graph_traits<boost::NdnGlobalRouterGraph>::vertex_descriptor vertex_descriptor;
 	BackupRestoreOriginalMetrics("Backup");
 
 	bool foundPath=true;
@@ -546,6 +548,7 @@ void  GlobalRoutingHelper::BackupRestoreOriginalMetrics(const std::string action
 	BOOST_CONCEPT_ASSERT((boost::VertexListGraphConcept<boost::NdnGlobalRouterGraph > ));
 	BOOST_CONCEPT_ASSERT((boost::IncidenceGraphConcept<boost::NdnGlobalRouterGraph>));
 	boost::NdnGlobalRouterGraph graph;
+	typedef boost::graph_traits<boost::NdnGlobalRouterGraph>::vertex_descriptor vertex_descriptor;
 
 	for (NodeList::Iterator node = NodeList::Begin(); node != NodeList::End(); node++) {
 		Ptr<GlobalRouter> source = (*node)->GetObject<GlobalRouter>();
@@ -595,28 +598,11 @@ void  GlobalRoutingHelper::BackupRestoreOriginalMetrics(const std::string action
 // 2017-8-19 abandon scenarioHelper
 void GlobalRoutingHelper::addRouteHop(void)
 {
-	/*
-	Py_Initialize();
-	if(!Py_IsInitialized())
-	{
-		std::cout << "can't Initialize python" << std::endl;
-	}
-	std::string path="~/OneDrive/SCIP_STP/scipLearn1";
-	std::string chdir_cmd=std::string("sys.path.append(\""+path+"\")");
-	const char* cstr_cmd=chdir_cmd.c_str();
-	PyRun_SimpleString("import sys");
-	//PyRun_SimpleString(cstr_cmd);
-	PyObject *pName=PyString_FromString("learning");
-	PyObject *pModule=PyImport_Import(pName);
-	if(!pModule)
-	{
-		std::cout << "can't find learning.py " << std::endl;
-	}
-	*/
     //FibHelper::AddRoute(Names::Find<Node> ("Node4"), "/Node0", Names::Find<Node> ("Node1"),1);
     FibHelper::AddRoute(Names::Find<Node> ("Node1"), "/Node0", Names::Find<Node> ("Node4"),1);
     //FibHelper::AddRoute(Names::Find<Node> ("Node1"), "/Node0", Names::Find<Node> ("Node0"),1);
     FibHelper::AddRoute(Names::Find<Node> ("Node0"), "/Node0", Names::Find<Node> ("Node1"),1);
+    
 }
 
 } // namespace ndn
