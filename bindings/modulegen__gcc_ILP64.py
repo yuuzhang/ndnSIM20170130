@@ -71,9 +71,9 @@ def register_types(module):
     reg_ndn(module.add_cpp_namespace('ndn'))
     
     # ZhangYu 2017-9-4, refer to the same file in ubuntu 12.04, also can see from http://ndnsim.net/2.3/doxygen/classns3_1_1AnnotatedTopologyReader.html
-    # AnnotatedTopologyReader has the same level to "ndn"
-    module.add_class('AnnotatedTopologyReader',  parent=module.get_root()['ns3::TopologyReader'])
-    module.add_class('RocketfuelWeightsReader', parent=module.get_root()['ns3::AnnotatedTopologyReader'])
+    # AnnotatedTopologyReader has the same level to "ndn",refer to scr/topology-read/modulegen_gcc_ILP32.py
+    module.add_class('TopologyReader',import_from_module='ns.topology_read')
+    module.add_class('AnnotatedTopologyReader', parent=module['ns3::TopologyReader'])
 
 def register_methods(root_module):
     reg_other_modules(root_module)
@@ -310,11 +310,12 @@ def reg_other_modules(root_module):
         cls.add_constructor([param('ns3::ApplicationContainer', 'container')])
     reg_ApplicationContainer(root_module['ns3::ApplicationContainer'])
 
+    # ZhangYu 2017-9-5 refer to same name file in Ubuntu1204 
     def reg_AnnotatedTopologyReader(cls):
-        cls.add_constructor([param('std::string const &', 'path', default_value='""'), param('double', 'scale', default_value='1.0e+0')])
-        cls.add_method('SetFileName', 'void', [param('const std::string&', 'fileName')])
-        cls.add_method('read', 'void', 'void')
-    reg_AnnotatedTopologyReader(root_module,root_module['ns3::AnnotatedTopologyReader'])
+         cls.add_constructor([param('std::string const &', 'path', default_value='""'), param('double', 'scale', default_value='1.0e+0')])
+         cls.add_method('SetFileName', 'void', [param('const std::string&', 'fileName')])
+         cls.add_method('Read', 'void', [])
+    reg_AnnotatedTopologyReader(root_module['ns3::AnnotatedTopologyReader'])
 
 def register_functions(root_module):
     return
