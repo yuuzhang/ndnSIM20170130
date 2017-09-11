@@ -65,7 +65,7 @@
 #include "ns3/string.h"
 
 //2017-8-19 try python caculate routes and add to FIB manually
-#include "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7/Python.h"
+//#include "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7/Python.h"
 
 NS_LOG_COMPONENT_DEFINE("ndn.GlobalRoutingHelper");
 

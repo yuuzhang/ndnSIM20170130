@@ -44,7 +44,6 @@ public:
    * \see ns3::Names class
    */
   AnnotatedTopologyReader(const std::string& path = "", double scale = 1.0);
-
   virtual ~AnnotatedTopologyReader();
 
   /**
@@ -115,7 +114,6 @@ public:
    */
   virtual void
   SaveGraphviz(const std::string& file);
-
 
 protected:
   Ptr<Node>

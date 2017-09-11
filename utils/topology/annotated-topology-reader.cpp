@@ -70,7 +70,6 @@ AnnotatedTopologyReader::AnnotatedTopologyReader(const std::string& path, double
   , m_scale(scale)
   , m_requiredPartitions(1)
 {
-
   NS_LOG_FUNCTION(this);
 
   m_randX->SetAttribute("Min", DoubleValue(0));
@@ -80,8 +79,6 @@ AnnotatedTopologyReader::AnnotatedTopologyReader(const std::string& path, double
   m_randY->SetAttribute("Max", DoubleValue(100.0));
 
   SetMobilityModel("ns3::ConstantPositionMobilityModel");
-  std::cout << "2017-9-7 ZhangYu AnnotatedToplogyReader  done" << std::endl;
-
 }
 
 void

@@ -71,15 +71,17 @@ def register_types(module):
     reg_ndn(module.add_cpp_namespace('ndn'))
     
     # ZhangYu 2017-9-4, refer to the same file in ubuntu 12.04, also can see from http://ndnsim.net/2.3/doxygen/classns3_1_1AnnotatedTopologyReader.html
-    # AnnotatedTopologyReader has the same level to "ndn",refer to scr/topology-read/modulegen_gcc_ILP32.py
+    # refer to scr/topology-read/modulegen_gcc_ILP32.py
     module.add_class('empty', import_from_module='ns.core')
     module.add_cpp_namespace('empty')
     module.add_class('SimpleRefCount', automatic_type_narrowing=True, import_from_module='ns.core', template_parameters=['ns3::TopologyReader', 'ns3::empty',
     'ns3::DefaultDeleter<ns3::TopologyReader>'], parent=module['ns3::empty'], memory_policy=cppclass.ReferenceCountingMethodsPolicy(incref_method='Ref', decref_method='Unref',
         peekref_method='GetReferenceCount'))
     module.add_class('TopologyReader',allow_subclassing=True, import_from_module='ns.topology_read',parent=module['ns3::SimpleRefCount< ns3::TopologyReader, ns3::empty, ns3::DefaultDeleter<ns3::TopologyReader> >'])
-    module.add_cpp_namespace('TopologyReader')
-    module.add_class('AnnotatedTopologyReader', allow_subclassing=True,parent=module['ns3::TopologyReader'])
+    Module("TopologyReader",cpp_namespace="::TopologyReader")
+    # Refer to the file in Ubuntu1204, annotated-topology-reader.h (module 'ndnSIM'): ns3::AnnotatedTopologyReader [class]
+    module.add_class('AnnotatedTopologyReader', allow_subclassing=True, parent=module['ns3::TopologyReader'])
+    Module("AnnotatedTopologyReader",cpp_namespace="ns3::AnnotatedTopologyReader")
     # have the folowing sentence would make error of adding AnnotatedTopologyReader
     #module.add_cpp_namespace('AnnotatedTopologyReader') 
 
@@ -319,15 +321,15 @@ def reg_other_modules(root_module):
     reg_ApplicationContainer(root_module['ns3::ApplicationContainer'])
 
     # ZhangYu 2017-9-5 refer to same name file in Ubuntu1204 
+    def reg_TopologyReader(cls):
+         cls.add_constructor([])
+         cls.add_method('SetFileName', 'void', [param('std::string const &', 'fileName')])
+    reg_TopologyReader(root_module['ns3::TopologyReader'])
     def reg_AnnotatedTopologyReader(cls):
          cls.add_constructor([param('std::string const &', 'path', default_value='""'), param('double', 'scale', default_value='1.0e+0')])
          cls.add_method('Read', 'void', [])
     reg_AnnotatedTopologyReader(root_module['ns3::AnnotatedTopologyReader'])
 
-    def reg_TopologyReader(cls):
-         cls.add_constructor([])
-         cls.add_method('SetFileName', 'void', [param('std::string const &', 'fileName')])
-    reg_TopologyReader(root_module['ns3::TopologyReader'])
 
 def register_functions(root_module):
     return

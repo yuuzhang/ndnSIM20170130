@@ -11,7 +11,6 @@ import mintreeMFP
 from ns.topology_read import TopologyReader
 from ns.topology_read import *
 
-
 # ZhangYu 2017-9-6 改用Python脚本运行ndnSIM仿真
 """ 
     PyBindGen在Ubuntu1204虚拟机中的是可以用的，但是ndnSIM2.0以后无论是1404的GCC4.8还是1604的GCC5.1都不能正常执行--apiscan
@@ -31,8 +30,7 @@ parser.add_argument("--simulationSpan", type=int, default=50, help="Simulation s
 parser.add_argument("--routingName", type=str, choices=["BestRoute","MultiPathPairFirst"], default="MultiPathPairFirst", help="could be Flooding, BestRoute, MultiPath, MultiPathPairFirst");
 args=parser.parse_args()
 print args.routingName
-print globals
-print locals
+
 print dir(TopologyReader)
 print dir(AnnotatedTopologyReader)
 
