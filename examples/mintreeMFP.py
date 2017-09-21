@@ -159,7 +159,7 @@ def readTopology(filename):
     #plt.show()
     
     return edge,len(node)
-def caculateRoute():
+def caculateRoute(filename):
     n=6;
     e,d={},{}
     e[0,1]={'cap':10,'cost':2}
@@ -172,7 +172,6 @@ def caculateRoute():
     # Traffic Matrix d[1,5] represent data from node 1 to node 5
     d[0,4]=1
     d[0,3]=1
-    filename="topo-for-CompareMultiPath.txt"
     e,n=readTopology(filename)
     
     model=mintreeMFP(n,e,d)

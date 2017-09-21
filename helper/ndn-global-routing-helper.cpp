@@ -402,8 +402,7 @@ GlobalRoutingHelper::CalculateAllPossibleRoutes()
 void
 GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst()
 {
-	std::cout << "2017-9-4 call OK" << std::endl;
-	CalculateNoCommLinkMultiPathRoutesPairFirst(true);
+	CalculateNoCommLinkMultiPathRoutesPairFirst(false);
 }
 /* ZhangYu 2016-12-1 为了和Matlab中的算法保持一致，搜索出一条路径后0->1->4后，添加路由0->1->4，设置其为Max-1
  * 将当setReverseRoute是True时，还要设置4->1->0为Max-1，但是不添加路由4->1->0
@@ -434,7 +433,7 @@ GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst(bool setReverse
 			//开始计算最短路
 			for(uint32_t appId=0; appId<(*node)->GetNApplications();appId++)
 			{
-				NS_LOG_DEBUG("ZhangYu 2016-11-30 appId:" <<(*node)->GetApplication(appId)->GetInstanceTypeId().GetName());
+				//NS_LOG_DEBUG("ZhangYu 2016-11-30 appId:" <<(*node)->GetApplication(appId)->GetInstanceTypeId().GetName());
 				std::string appTypeStr= (*node)->GetApplication(appId)->GetInstanceTypeId().GetName();
 				if(std::string::npos!= appTypeStr.find("Consumer"))	//only calculate the Consumer/source node 2015-1-8
 				{
@@ -445,7 +444,7 @@ GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst(bool setReverse
 					StringValue tmp;
 					(*node)->GetApplication(appId)->GetAttribute("Prefix",tmp);
 					curPrefix=tmp.Get();
-					//NS_LOG_DEBUG("ZhangYu 2015-2-25   consumer1->GetApplication(0)->GetAttribute(Prefix,: " << curPrefix << std::endl);
+					NS_LOG_DEBUG("ZhangYu 2015-2-25   consumer1->GetApplication(0)->GetAttribute(Prefix,: " << curPrefix << std::endl);
 
 					boost::DistancesMap    distances;
 					boost::PredecessorsMap predecessors;
@@ -475,7 +474,7 @@ GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst(bool setReverse
 							}
 							else
 							{
-								//NS_LOG_DEBUG("ZhangYu 2014-1-3, Node:" << dist->first->GetObject<Node>()->GetId()<< "   face:" << *dist->second.get<0>()<<"  with distance:" <<dist->second.get<1>());
+								//NS_LOG_DEBUG("ZhangYu 2014-1-3, Node:" << dist->first->GetId()<< "   face:" << *std::get<0>(dist->second)<<"  with distance:" << std::get<1>(dist->second));
 
 								//下面的语句使得为每个producer的节点的每个应用添加路由fibs，为0就不循环，一个节点有多个Apps时循环（这里循环执行有点冗余，因为步骤一样，只是prefix不同，但是为了代码清爽，就这样了）
 								//NS_LOG_DEBUG("ZhangYu 2014-2-7 dist->first->GetLocalPrefixes.size(): " <<dist->first->GetLocalPrefixes().size());
@@ -487,7 +486,7 @@ GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst(bool setReverse
 									{
 										Ptr<GlobalRouter> curNode =dist->first ;
 										Ptr<GlobalRouter> preNode;
-										NS_LOG_DEBUG("ZhangYu 2014-1-7 producer Node: " << curNode->GetObject<Node>()->GetId() );
+										//NS_LOG_DEBUG("ZhangYu 2014-1-7 producer Node: " << curNode->GetObject<Node>()->GetId() );
 
 										while (curNode!=source)
 										{
@@ -500,8 +499,8 @@ GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst(bool setReverse
 														 << " RemoteUri" << std::get<0>(distances[curNode])->getRemoteUri()
 														 << "  with distance: " << std::get<1>(distances[curNode])-std::get<1>(distances[preNode])
 														 << "  with delay " << std::get<2>(distances[curNode]) << std::endl);
-
-											if(std::get<1>(distances[curNode])-std::get<1>(distances[preNode])<std::numeric_limits<uint16_t>::max())
+											//ZhangYu 2017-9-21 判断条件修改为 max()-1，原来是max()，导致死循环，因为总认为max-1符合条件
+											if(std::get<1>(distances[curNode])-std::get<1>(distances[preNode]) < std::numeric_limits<uint16_t>::max()-1)
 											{
 												FibHelper::AddRoute(preNode->GetObject<Node>(), *prefix, std::get<0>(distances[curNode]),
 																	std::get<1>(distances[curNode])-std::get<1>(distances[preNode]));
@@ -526,12 +525,15 @@ GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst(bool setReverse
 											 }
 											}
 											curNode=preNode;
-										}
-									}
+										}	//while
+
+									} //if (curPrefix
 								}
 							}
-						}
-					}
+						} //else
+						//break;
+					}	//for (boost::DistanceMap..
+					//break;
 				}
 			}
 		}

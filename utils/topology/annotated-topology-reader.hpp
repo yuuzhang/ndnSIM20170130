@@ -62,6 +62,9 @@ public:
   virtual NodeContainer
   GetNodes() const;
 
+  virtual Ptr<Node>
+  FindNodeFromName(const std::string name);
+
   /**
    * \brief Get links read by the reader
    */

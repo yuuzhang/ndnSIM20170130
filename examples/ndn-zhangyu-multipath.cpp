@@ -57,7 +57,8 @@ main (int argc, char *argv[])
 {
 	bool manualAssign=true;
 	int InterestsPerSec=200;
-	int simulationSpan=50;
+	int simulationSpan=200;
+	int tracePerSec=5;
 	string routingName="MultiPathPairFirst";
 
 	//----------------命令行参数----------------
@@ -96,8 +97,8 @@ main (int argc, char *argv[])
 	std::vector<int> consumerNodes,producerNodes;
 	//生成consumer和producer的节点号动态数组
 	if(manualAssign)	{
-		int tmpConsumer[]={0};
-		int tmpProducer[]={4};
+		int tmpConsumer[]={0,2};
+		int tmpProducer[]={4,3};
 		consumerNodes.assign(tmpConsumer,tmpConsumer+sizeof(tmpConsumer)/sizeof(int));
 		producerNodes.assign(tmpProducer,tmpProducer+sizeof(tmpConsumer)/sizeof(int));
 	}
@@ -120,7 +121,7 @@ main (int argc, char *argv[])
 		consumerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(consumerNodes[i]));
 		ApplicationContainer app=consumerHelper.Install(consumer1);
 		app.Start(Seconds(0.01*i));
-		std::cout <<"ZhangYu  consumer1->GetId(): " <<consumer1->GetId() << std::endl;
+		std::cout <<"ZhangYu  consumer1->GetId(): " <<consumer1->GetId() << "  prefix: /Node"+boost::lexical_cast<std::string>(consumerNodes[i]) << std::endl;
 	}
 
 	for(uint32_t i=0;i<producerNodes.size();i++)	{
@@ -140,9 +141,9 @@ main (int argc, char *argv[])
 	  ndn::GlobalRoutingHelper::CalculateRoutes ();
 	}
 	else if(routingName.compare("MultiPathPairFirst")==0){
-		//ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst();
+		ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst();
 		//ndn::GlobalRoutingHelper::CalculateRoutes();
-		ndn::GlobalRoutingHelper::addRouteHop();
+		//ndn::GlobalRoutingHelper::addRouteHop();
 	}
 	else if(routingName.compare("Flooding")==0){
 		ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes();
@@ -152,16 +153,18 @@ main (int argc, char *argv[])
 	//Simulator::Schedule (Seconds (10.0), ndn::LinkControlHelper::FailLink, Names::Find<Node> ("Node0"),Names::Find<Node> ("Node4"));
 	//Simulator::Schedule (Seconds (15.0), ndn::LinkControlHelper::UpLink,   Names::Find<Node> ("Node0"),Names::Find<Node> ("Node4"));
 
-	Simulator::Stop (Seconds (simulationSpan));
+	Simulator::Stop (Seconds(simulationSpan));
 
 	//ZhangYu Add the trace，不愿意文件名称还有大小写的区别，所以把 routingName 全部转为小写
 	std::transform(routingName.begin(), routingName.end(), routingName.begin(), ::tolower);
-	string filename=routingName+"-"+boost::lexical_cast<std::string>(InterestsPerSec)+".txt";
-	//ndn::CsTracer::InstallAll ("cs-trace-"+filename, Seconds (1));
-	//ndn::L3RateTracer::InstallAll ("rate-trace-"+filename, Seconds (1));
-	ndn::L3RateTracer::InstallAll ("rate-trace.txt", Seconds (1));
-	//ndn::AppDelayTracer::InstallAll ("app-delays-trace-"+filename);
-	L2RateTracer::InstallAll ("drop-trace.txt", Seconds (1));
+	string filename="-"+routingName+"-"+boost::lexical_cast<std::string>(InterestsPerSec)+".txt";
+	filename=".txt";
+	ndn::CsTracer::InstallAll ("cs-trace"+filename, Seconds (tracePerSec));
+	ndn::L3RateTracer::InstallAll ("rate-trace"+filename, Seconds (tracePerSec));
+	// L3AggregateTracer disappeared in new version
+	//ndn::L3AggregateTracer::InstallAll ("aggregate-trace-"+filename, Seconds (1));
+	ndn::AppDelayTracer::InstallAll ("app-delays-trace"+filename);
+	L2RateTracer::InstallAll ("drop-trace"+filename, Seconds (tracePerSec));
 
 	Simulator::Run ();
 	Simulator::Destroy ();
