@@ -239,6 +239,9 @@ AppDelayTracer::LastRetransmittedInterestDataDelay(Ptr<App> app, uint32_t seqno,
         << "LastDelay"
         << "\t" << delay.ToDouble(Time::S) << "\t" << delay.ToDouble(Time::US) << "\t" << 1 << "\t"
         << hopCount << "\n";
+  // ZhangYu 2017-9-25 发现这个函数不能持续到仿真全过程
+  //std::cout << "AppDelayTracer: -----" << Simulator::Now().ToDouble(Time::S) << std::endl;
+  //NS_LOG_DEBUG("AppDelayTracer:-----" << Simulator::Now().ToDouble(Time::S) << std::endl);
 }
 
 void

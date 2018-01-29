@@ -134,7 +134,7 @@ public:
  * 原本打算用scenarioHelper来实现，结果发现它自成体系，拓扑和节点都用自己的，所以放弃
  */
 static void
-addRouteHop();
+addRouteHop(const std::string edgeStart,const std::string prefix, const std::string edgeEnd, std::int32_t metri);
 
 
 private:

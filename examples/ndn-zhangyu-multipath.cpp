@@ -58,21 +58,24 @@ main (int argc, char *argv[])
 	bool manualAssign=true;
 	int InterestsPerSec=200;
 	int simulationSpan=200;
-	int tracePerSec=5;
+	int TracePerSec=1;
+	int recordsNumber=100;
 	string routingName="MultiPathPairFirst";
 
 	//----------------命令行参数----------------
 	CommandLine cmd;
 	cmd.AddValue("InterestsPerSec","Interests emit by consumer per second",InterestsPerSec);
 	cmd.AddValue("simulationSpan","Simulation span time by seconds",simulationSpan);
-	cmd.AddValue ("routingName", "could be Flooding, BestRoute, MultiPath, MultiPathPairFirst", routingName);
+	cmd.AddValue ("routingName", "could be Flooding, BestRoute, MultiPath, MultiPathPairFirst, debug", routingName);
+	cmd.AddValue ("recordsNumber", "total number of records in tracer file", recordsNumber);
 	cmd.Parse(argc,argv);
-	std::cout << "routingName: " << routingName << "   " << InterestsPerSec << " " << simulationSpan << std::endl;
+	//std::cout << "routingName: " << routingName << "   " << InterestsPerSec << " " << simulationSpan << std::endl;
 
 	//----------------仿真拓扑----------------
 	AnnotatedTopologyReader topologyReader ("", 20);
-	//topologyReader.SetFileName ("src/ndnSIM/examples/topologies/26node-result-1.txt");
+	//topologyReader.SetFileName ("src/ndnSIM/examples/topologies/26node-result.txt");
 	topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-for-CompareMultiPath.txt");
+	//topologyReader.SetFileName ("src/ndnSIM/examples/topologies/12Nodes.txt");
 	//topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-for-xujun.txt");
 	topologyReader.Read ();
 	int nodesNumber=topologyReader.GetNodes().size();
@@ -81,10 +84,8 @@ main (int argc, char *argv[])
 	ndn::StackHelper ndnHelper;
 	// 下面这一句是Install NDN stack on all nodes
 	ndnHelper.SetOldContentStore("ns3::ndn::cs::Lru", "MaxSize","100"); // default ContentStore parameters
+	ndnHelper.SetOldContentStore("ns3::ndn::cs::Nocache"); // default ContentStore parameters
 	ndnHelper.InstallAll();
-	// Choosing forwarding strategy
-	ndn::StrategyChoiceHelper::InstallAll("/prefix", "/localhost/nfd/strategy/ncc");
-	//ndn::StrategyChoiceHelper::InstallAll("/prefix", "/localhost/nfd/strategy/best-route");
 
 	topologyReader.ApplyOspfMetric();  //使得链路metric生效
 
@@ -97,8 +98,8 @@ main (int argc, char *argv[])
 	std::vector<int> consumerNodes,producerNodes;
 	//生成consumer和producer的节点号动态数组
 	if(manualAssign)	{
-		int tmpConsumer[]={0,2};
-		int tmpProducer[]={4,3};
+		int tmpConsumer[]={0};
+		int tmpProducer[]={4};
 		consumerNodes.assign(tmpConsumer,tmpConsumer+sizeof(tmpConsumer)/sizeof(int));
 		producerNodes.assign(tmpProducer,tmpProducer+sizeof(tmpConsumer)/sizeof(int));
 	}
@@ -109,11 +110,11 @@ main (int argc, char *argv[])
 		}
 	}
 
-  //根据上面生成的几点对编号装在应用
+	//根据上面生成的节点对编号装载应用
 	for(uint32_t i=0;i<consumerNodes.size();i++)	{
-		//ndn::AppHelper consumerHelper("ns3::ndn::ConsumerZipfMandelbrot");
 		ndn::AppHelper consumerHelper ("ns3::ndn::ConsumerCbr");
 		consumerHelper.SetAttribute("Frequency", StringValue (boost::lexical_cast<std::string>(InterestsPerSec)));        // 100 interests a second
+		//ndn::AppHelper consumerHelper("ns3::ndn::ConsumerZipfMandelbrot");
 		//consumerHelper.SetAttribute("NumberOfContents", StringValue("100")); // 10 different contents
 		//consumerHelper.SetAttribute ("Randomize", StringValue ("uniform")); // 100 interests a second
 
@@ -121,6 +122,10 @@ main (int argc, char *argv[])
 		consumerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(consumerNodes[i]));
 		ApplicationContainer app=consumerHelper.Install(consumer1);
 		app.Start(Seconds(0.01*i));
+		// Choosing forwarding strategy
+		//ndn::StrategyChoiceHelper::InstallAll("/Node"+boost::lexical_cast<std::string> (consumerNodes[i]), "/localhost/nfd/strategy/ncc");
+		//ndn::StrategyChoiceHelper::InstallAll("/prefix", "/localhost/nfd/strategy/best-route");
+
 		std::cout <<"ZhangYu  consumer1->GetId(): " <<consumer1->GetId() << "  prefix: /Node"+boost::lexical_cast<std::string>(consumerNodes[i]) << std::endl;
 	}
 
@@ -136,17 +141,24 @@ main (int argc, char *argv[])
 		std::cout <<"ZhangYu producer1->GetId(): " <<producer1->GetId() << std::endl;
 	}
 
-  // Calculate and install FIBs
+	// Calculate and install FIBs
 	if(routingName.compare("BestRoute")==0){
 	  ndn::GlobalRoutingHelper::CalculateRoutes ();
 	}
 	else if(routingName.compare("MultiPathPairFirst")==0){
 		ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst();
 		//ndn::GlobalRoutingHelper::CalculateRoutes();
-		//ndn::GlobalRoutingHelper::addRouteHop();
+	}
+	else if(routingName.compare("debug")==0){
+		//当Consumer是0时，prefix=/Node0时，需要添加 0-->1-->4 的路由才可以，添加反向4->1->0没有Traffic
+		ndn::GlobalRoutingHelper::addRouteHop("Node0","/Node0","Node1",1);
+		ndn::GlobalRoutingHelper::addRouteHop("Node1","/Node0","Node4",1);
 	}
 	else if(routingName.compare("Flooding")==0){
 		ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes();
+	}
+	else{
+		std::cout << "!!!!  ~~~~~~Unkown routingName, try again..." <<std::endl;
 	}
 
 	// The failure of the link connecting consumer and router will start from seconds 10.0 to 15.0
@@ -158,13 +170,17 @@ main (int argc, char *argv[])
 	//ZhangYu Add the trace，不愿意文件名称还有大小写的区别，所以把 routingName 全部转为小写
 	std::transform(routingName.begin(), routingName.end(), routingName.begin(), ::tolower);
 	string filename="-"+routingName+"-"+boost::lexical_cast<std::string>(InterestsPerSec)+".txt";
-	filename=".txt";
-	ndn::CsTracer::InstallAll ("cs-trace"+filename, Seconds (tracePerSec));
-	ndn::L3RateTracer::InstallAll ("rate-trace"+filename, Seconds (tracePerSec));
+	//filename=".txt";
+
+	TracePerSec=simulationSpan/recordsNumber;
+	if(TracePerSec<1)
+		TracePerSec=1;
+	ndn::CsTracer::InstallAll ("cs-trace"+filename, Seconds (TracePerSec));
+	ndn::L3RateTracer::InstallAll ("rate-trace"+filename, Seconds (TracePerSec));
 	// L3AggregateTracer disappeared in new version
 	//ndn::L3AggregateTracer::InstallAll ("aggregate-trace-"+filename, Seconds (1));
 	ndn::AppDelayTracer::InstallAll ("app-delays-trace"+filename);
-	L2RateTracer::InstallAll ("drop-trace"+filename, Seconds (tracePerSec));
+	L2RateTracer::InstallAll ("drop-trace"+filename, Seconds (TracePerSec));
 
 	Simulator::Run ();
 	Simulator::Destroy ();

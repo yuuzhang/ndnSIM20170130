@@ -433,18 +433,17 @@ GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst(bool setReverse
 			//开始计算最短路
 			for(uint32_t appId=0; appId<(*node)->GetNApplications();appId++)
 			{
-				//NS_LOG_DEBUG("ZhangYu 2016-11-30 appId:" <<(*node)->GetApplication(appId)->GetInstanceTypeId().GetName());
 				std::string appTypeStr= (*node)->GetApplication(appId)->GetInstanceTypeId().GetName();
 				if(std::string::npos!= appTypeStr.find("Consumer"))	//only calculate the Consumer/source node 2015-1-8
 				{
-					//NS_LOG_DEBUG("ZhangYu 2014-1-1 is consumer node Id: " << (*node)->GetId() <<" " << (appTypeStr.find("Consumer")) <<"'  "<< appTypeStr);
-					NS_LOG_DEBUG ("===== Reachability from source Node: " << source->GetObject<Node> ()->GetId () << " (" << Names::FindName (source->GetObject<Node> ()) << ")");
-					//2015-2-25，添加的路由计算时只计算和 consumeer 拥有同样的 Prefix 的 Producer 的路由，这样保证添加的Fib和设置为无穷大的只是一对源目的节点对之间的多路径。
-					//虽然代码支持，这里没有仔细考虑多个 Application 时是否能正确运行，目前的一个节点只装在一个 consumer 或者一个 procuer，后面的也一样
 					StringValue tmp;
 					(*node)->GetApplication(appId)->GetAttribute("Prefix",tmp);
 					curPrefix=tmp.Get();
-					NS_LOG_DEBUG("ZhangYu 2015-2-25   consumer1->GetApplication(0)->GetAttribute(Prefix,: " << curPrefix << std::endl);
+					//NS_LOG_DEBUG("ZhangYu 2015-2-25   consumer1->GetApplication(0)->GetAttribute(Prefix,: " << curPrefix << std::endl);
+					NS_LOG_DEBUG ("===== Reachability from source Node: " << source->GetObject<Node> ()->GetId () << " ("
+							<< Names::FindName (source->GetObject<Node> ()) << ")  Prefix: " << curPrefix);
+					//2015-2-25，添加的路由计算时只计算和 consumeer 拥有同样的 Prefix 的 Producer 的路由，这样保证添加的Fib和设置为无穷大的只是一对源目的节点对之间的多路径。
+					//虽然代码支持，这里没有仔细考虑多个 Application 时是否能正确运行，目前的一个节点只装在一个 consumer 或者一个 procuer，后面的也一样
 
 					boost::DistancesMap    distances;
 					boost::PredecessorsMap predecessors;
@@ -474,7 +473,7 @@ GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst(bool setReverse
 							}
 							else
 							{
-								//NS_LOG_DEBUG("ZhangYu 2014-1-3, Node:" << dist->first->GetId()<< "   face:" << *std::get<0>(dist->second)<<"  with distance:" << std::get<1>(dist->second));
+								NS_LOG_DEBUG("  ---DistancesMapLoop--, Node:" << dist->first->GetObject<Node>()->GetId()<< "   face:" << *std::get<0>(dist->second)<<"  with distance:" << std::get<1>(dist->second));
 
 								//下面的语句使得为每个producer的节点的每个应用添加路由fibs，为0就不循环，一个节点有多个Apps时循环（这里循环执行有点冗余，因为步骤一样，只是prefix不同，但是为了代码清爽，就这样了）
 								//NS_LOG_DEBUG("ZhangYu 2014-2-7 dist->first->GetLocalPrefixes.size(): " <<dist->first->GetLocalPrefixes().size());
@@ -491,14 +490,14 @@ GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst(bool setReverse
 										while (curNode!=source)
 										{
 											preNode=predecessors[curNode];
-											NS_LOG_DEBUG("ZhangYu 2016-12-4 curNode: " << curNode->GetObject<Node>()->GetId() << "；      preNode: " << preNode->GetObject<Node>()->GetId() );
+											NS_LOG_DEBUG("    ---current backtracking Node: " << curNode->GetObject<Node>()->GetId() );
 											//ZhangYu 2016-12 ZYWeightCombine的返回值是，假设路径为0-1-4，对于节点4，返回的face是1-4的，返回的距离是
-											NS_LOG_DEBUG("ZhangYu  2014-12-4 prefix: " << *prefix << "  Node: " << preNode->GetObject<Node>()->GetId()
+											NS_LOG_DEBUG("    ---prefix: " << *prefix << "  preNode: " << preNode->GetObject<Node>()->GetId()
 														 << "  reachable via face: " << *std::get<0>(distances[curNode])
 														 << " LocalUri： " << std::get<0>(distances[curNode])->getLocalUri()
 														 << " RemoteUri" << std::get<0>(distances[curNode])->getRemoteUri()
 														 << "  with distance: " << std::get<1>(distances[curNode])-std::get<1>(distances[preNode])
-														 << "  with delay " << std::get<2>(distances[curNode]) << std::endl);
+														 << "  with delay " << std::get<2>(distances[curNode]) );
 											//ZhangYu 2017-9-21 判断条件修改为 max()-1，原来是max()，导致死循环，因为总认为max-1符合条件
 											if(std::get<1>(distances[curNode])-std::get<1>(distances[preNode]) < std::numeric_limits<uint16_t>::max()-1)
 											{
@@ -563,10 +562,10 @@ void  GlobalRoutingHelper::BackupRestoreOriginalMetrics(const std::string action
 		// remember interface statuses
 		std::list<nfd::FaceId> faceIds;
 
-		NS_LOG_DEBUG("ZhangYu 2016-12-4 Node: " << (*node)->GetId() << "  Node Name: " << Names::FindName(*node));
+		//NS_LOG_DEBUG("ZhangYu 2016-12-4 Node: " << (*node)->GetId() << "  Node Name: " << Names::FindName(*node));
 		if (action=="Backup&Initial")	{
 			for (Face& face : l3->getForwarder()->getFaceTable()) {
-				NS_LOG_DEBUG("ZhangYu face Id:" << face.getId() << "    face:" << face <<"   localUri: " << face.getLocalUri() << "   remoteUri: "  << face.getRemoteUri());
+				//NS_LOG_DEBUG("ZhangYu face Id:" << face.getId() << "    face:" << face <<"   localUri: " << face.getLocalUri() << "   remoteUri: "  << face.getRemoteUri());
 				originalMetrics[nodeNo][face.getId() ] = face.getMetric();
 				face.setMetric(std::numeric_limits<uint16_t>::max() - 1);
 				// value std::numeric_limits<uint16_t>::max () MUST NOT be used (reserved)
@@ -576,7 +575,7 @@ void  GlobalRoutingHelper::BackupRestoreOriginalMetrics(const std::string action
 
 		else if (action=="Backup")	{
 			for (Face& face : l3->getForwarder()->getFaceTable()) {
-				NS_LOG_DEBUG("ZhangYu face Id:" << face.getId() << "    face:" << face <<"   localUri: " << face.getLocalUri() << "   remoteUri: "  << face.getRemoteUri());
+				//NS_LOG_DEBUG("ZhangYu face Id:" << face.getId() << "    face:" << face <<"   localUri: " << face.getLocalUri() << "   remoteUri: "  << face.getRemoteUri());
 				faceIds.push_back(face.getId());
 				originalMetrics[nodeNo][face.getId()] = face.getMetric();
 			}
@@ -595,7 +594,7 @@ void  GlobalRoutingHelper::BackupRestoreOriginalMetrics(const std::string action
 }
 
 // 2017-8-19 abandon scenarioHelper
-void GlobalRoutingHelper::addRouteHop(void)
+void GlobalRoutingHelper::addRouteHop(const std::string edgeStart,const std::string prefix,const std::string edgeEnd, std::int32_t metric)
 {
 	/*
 	Py_Initialize();
@@ -615,10 +614,10 @@ void GlobalRoutingHelper::addRouteHop(void)
 		std::cout << "can't find learning.py " << std::endl;
 	}
 	*/
-    //FibHelper::AddRoute(Names::Find<Node> ("Node4"), "/Node0", Names::Find<Node> ("Node1"),1);
-    FibHelper::AddRoute(Names::Find<Node> ("Node1"), "/Node0", Names::Find<Node> ("Node4"),1);
+    FibHelper::AddRoute(edgeStart, prefix, edgeEnd,metric);
+    //FibHelper::AddRoute(Names::Find<Node> ("Node1"), "/Node0", Names::Find<Node> ("Node4"),1);
     //FibHelper::AddRoute(Names::Find<Node> ("Node1"), "/Node0", Names::Find<Node> ("Node0"),1);
-    FibHelper::AddRoute(Names::Find<Node> ("Node0"), "/Node0", Names::Find<Node> ("Node1"),1);
+    //FibHelper::AddRoute(Names::Find<Node> ("Node0"), "/Node0", Names::Find<Node> ("Node1"),1);
 }
 
 } // namespace ndn

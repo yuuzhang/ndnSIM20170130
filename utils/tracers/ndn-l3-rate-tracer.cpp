@@ -200,6 +200,8 @@ L3RateTracer::PeriodicPrinter()
   Reset();
 
   m_printEvent = Simulator::Schedule(m_period, &L3RateTracer::PeriodicPrinter, this);
+  //std::cout << "PeriodicPrinter: -----" << Simulator::Now().ToDouble(Time::S) << std::endl;
+  NS_LOG_DEBUG("AppDelayTracer:-----" << Simulator::Now().ToDouble(Time::S) << std::endl);
 }
 
 void
@@ -262,7 +264,8 @@ void
 L3RateTracer::Print(std::ostream& os) const
 {
   Time time = Simulator::Now();
-
+  //2017-10-15如果想知道仿真执行情况，只能是这样输出仿真时间。直接使用NS_LOG后，发现后面有时间的输出
+  //NS_LOG_DEBUG("current simulation clock time is ："<< time);
   for (auto& stats : m_stats) {
     if (stats.first == nfd::face::INVALID_FACEID)
       continue;
