@@ -23,9 +23,10 @@
  * NFD, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef NDNSIM_EXAMPLES_NDN_LOAD_BALANCER_RANDOM_LOAD_BALANCER_STRATEGY_HPP
-#define NDNSIM_EXAMPLES_NDN_LOAD_BALANCER_RANDOM_LOAD_BALANCER_STRATEGY_HPP
+#ifndef NDNSIM_EXAMPLES_NDN_RANDOMIZED_ROUNDING_STRATEGY_HPP
+#define NDNSIM_EXAMPLES_NDN_RANDOMIZED_ROUNDING_STRATEGY_HPP
 
+#include <boost/random.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include "face/face.hpp"
 #include "fw/strategy.hpp"
@@ -54,4 +55,4 @@ protected:
 } // namespace fw
 } // namespace nfd
 
-#endif // NDNSIM_EXAMPLES_NDN_LOAD_BALANCER_RANDOM_LOAD_BALANCER_STRATEGY_HPP
+#endif // NDNSIM_EXAMPLES_NDN_RANDOMIZED_ROUNDING_STRATEGY_HPP

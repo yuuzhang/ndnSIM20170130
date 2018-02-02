@@ -58,7 +58,12 @@ FibManager::addNextHop(const Name& topPrefix, const Interest& interest,
   const Name& prefix = parameters.getName();
   FaceId faceId = parameters.getFaceId();
   uint64_t cost = parameters.getCost();
-
+  // ZhangYu 2018-2-1
+  uint64_t probability=0;
+  if(parameters.hasProbability()){
+	  probability=parameters.getProbability();
+	  std::cout << "ZhangYu 2018-2-1 FibManager::addNexHop probability: " << probability << std::endl;
+  }
   NFD_LOG_TRACE("add-nexthop prefix: " << prefix
                 << " faceid: " << faceId
                 << " cost: " << cost);
@@ -66,13 +71,23 @@ FibManager::addNextHop(const Name& topPrefix, const Interest& interest,
   Face* face = m_faceTable.get(faceId);
   if (face != nullptr) {
     fib::Entry* entry = m_fib.insert(prefix).first;
-    entry->addNextHop(*face, cost);
+    if(parameters.hasProbability()){
+		entry->addNextHop(*face, cost, probability);
 
-    NFD_LOG_DEBUG("add-nexthop result: OK"
-                  << " prefix:" << prefix
-                  << " faceid: " << faceId
-                  << " cost: " << cost);
+		NFD_LOG_DEBUG("add-nexthop result: OK"
+					  << " prefix:" << prefix
+					  << " faceid: " << faceId
+					  << " cost: " << cost
+					  << " probability: " << probability);
+    }
+    else {
+		entry->addNextHop(*face, cost);
 
+		NFD_LOG_DEBUG("add-nexthop result: OK"
+					  << " prefix:" << prefix
+					  << " faceid: " << faceId
+					  << " cost: " << cost);
+    }
     return done(ControlResponse(200, "Success").setBody(parameters.wireEncode()));
   }
   else {

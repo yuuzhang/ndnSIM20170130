@@ -212,6 +212,7 @@ def register_methods(root_module):
         cls.add_method('CalculateAllPossibleRoutes', 'void', [])
         cls.add_method('CalculateNoCommLinkMultiPathRoutesPairFirst','void',[])
         cls.add_method('addRouteHop','void',[param('const std::string&','edgeStart'),param('const std::string&','prefix'),param('const std::string&','edgeEnd'),param('int','metric')])
+        cls.add_method('addRouteHop','void',[param('const std::string&','edgeStart'),param('const std::string&','prefix'),param('const std::string&','edgeEnd'),param('int','metric'),param('double','probability')])
     reg_GlobalRoutingHelper(root_module['ns3::ndn::GlobalRoutingHelper'])
 
     def reg_Name(root_module, cls):
@@ -536,8 +537,38 @@ def reg_other_modules(root_module):
          cls.add_method('Read', param('const ns3::NodeContainer&', 'nodes'), [])
          cls.add_method('ApplyOspfMetric','void',[])
          cls.add_method('FindNodeFromName','ns3::Ptr< ns3::Node >', [param('std::string const &', 'name')])
+         # ZhangYu 2018-1-28 for traffic load configure
+         cls.add_method('GetNodeName','std::string',[param('ns3::Ptr< ns3::Node >','node')])
     reg_AnnotatedTopologyReader(root_module['ns3::AnnotatedTopologyReader'])
-
+    
+    # ZhangYu 2018-1-28 add for configure traffic load
+    def reg_NodeContainer(root_module,cls):
+        ## node-container.h (module 'network'): ns3::Ptr<ns3::Node> ns3::NodeContainer::Get(uint32_t i) const [member function]
+        cls.add_method('Get', 
+                   'ns3::Ptr< ns3::Node >', 
+                   [param('uint32_t', 'i')], 
+                   is_const=True)
+        ## node-container.h (module 'network'): uint32_t ns3::NodeContainer::size() const [member function]
+        # ZhangYu 2018-1-28, size() donot working, so add GetN
+        cls.add_method('size', 
+                   'uint32_t', 
+                   [], 
+                   is_const=True)
+        ## node-container.h (module 'network'): uint32_t ns3::NodeContainer::GetN() const [member function]
+        cls.add_method('GetN', 
+                   'uint32_t', 
+                   [], 
+                   is_const=True)
+    reg_NodeContainer(root_module, root_module['ns3::NodeContainer'])
+    # ZhangYu 2018-1-28 maybe will be use in future
+    def reg_Node(root_module,cls):
+        ## node.h (module 'network'): uint32_t ns3::Node::GetId() const [member function]
+        cls.add_method('GetId', 
+                   'uint32_t', 
+                   [], 
+                   is_const=True)
+    reg_Node(root_module,root_module['ns3::Node'])
+    return
 
 def register_functions(root_module):
     return

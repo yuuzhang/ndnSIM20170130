@@ -123,7 +123,7 @@ main (int argc, char *argv[])
 		ApplicationContainer app=consumerHelper.Install(consumer1);
 		app.Start(Seconds(0.01*i));
 		// Choosing forwarding strategy
-		//ndn::StrategyChoiceHelper::InstallAll("/Node"+boost::lexical_cast<std::string> (consumerNodes[i]), "/localhost/nfd/strategy/ncc");
+		ndn::StrategyChoiceHelper::InstallAll("/Node"+boost::lexical_cast<std::string> (consumerNodes[i]), "/localhost/nfd/strategy/randomized-rounding");
 		//ndn::StrategyChoiceHelper::InstallAll("/prefix", "/localhost/nfd/strategy/best-route");
 
 		std::cout <<"ZhangYu  consumer1->GetId(): " <<consumer1->GetId() << "  prefix: /Node"+boost::lexical_cast<std::string>(consumerNodes[i]) << std::endl;
@@ -158,7 +158,7 @@ main (int argc, char *argv[])
 		ndn::GlobalRoutingHelper::CalculateAllPossibleRoutes();
 	}
 	else{
-		std::cout << "!!!!  ~~~~~~Unkown routingName, try again..." <<std::endl;
+		std::cout << "!!!!  ~~~~~~Unkown routingName: " << routingName << ", try again..." <<std::endl;
 	}
 
 	// The failure of the link connecting consumer and router will start from seconds 10.0 to 15.0

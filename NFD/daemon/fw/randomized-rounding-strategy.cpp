@@ -21,6 +21,9 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NFD, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * 2018-2-2 在random-load-balancer-strategy的基础上修改而成，但如果放在example下，python代码的主程序不能正常工作
+ * 所以参考了BestRoute的代码添加了注册，移动到NFD/Daemon/fw下，c++和Python都可以正常运行
  */
 
 #include "randomized-rounding-strategy.hpp"
@@ -37,7 +40,9 @@ namespace nfd {
 namespace fw {
 
 const Name
-  RandomizedRoundingStrategy::STRATEGY_NAME("ndn:/localhost/nfd/strategy/randomized-rounding");
+  RandomizedRoundingStrategy::STRATEGY_NAME("ndn:/localhost/nfd/strategy/randomized-rounding/%FD%01");
+// ZhangYu 2018-2-2 看到bestRoute有就加上了，否则不能加载策略
+NFD_REGISTER_STRATEGY(RandomizedRoundingStrategy);
 
 RandomizedRoundingStrategy::RandomizedRoundingStrategy(Forwarder& forwarder, const Name& name)
   : Strategy(forwarder, name)
@@ -74,7 +79,7 @@ RandomizedRoundingStrategy::afterReceiveInterest(const Face& inFace, const Inter
   }
 
   const fib::Entry& fibEntry = this->lookupFib(*pitEntry);
-  const fib::NextHopList& nexthops = fibEntry.getNextHops();
+  const fib::NextHopList& nexthops = fibEntry.getNextHops();	//端口列表
 
   // Ensure there is at least 1 Face is available for forwarding
   if (!hasFaceForForwarding(inFace, nexthops, pitEntry)) {
@@ -82,19 +87,26 @@ RandomizedRoundingStrategy::afterReceiveInterest(const Face& inFace, const Inter
     return;
   }
 
-  fib::NextHopList::const_iterator selected;
-  do {
-    boost::random::uniform_int_distribution<> dist(0, nexthops.size() - 1);
-    const size_t randomIndex = dist(m_randomGenerator);
 
-    uint64_t currentIndex = 0;
+  boost::random::uniform_01<boost::random::mt19937&> dist(m_randomGenerator);
+  const uint64_t randomValue =std::round(dist()*10000); //和 global-routing-help中的一样
+  uint64_t probabilitySum=0;
+  fib::NextHopList::const_iterator selected;	//端口变量
+  for(selected=nexthops.begin(); selected !=nexthops.end(); ++selected) {
 
-    for (selected = nexthops.begin(); selected != nexthops.end() && currentIndex != randomIndex;
-         ++selected, ++currentIndex) {
-    }
-  } while (!canForwardToNextHop(inFace, pitEntry, *selected));
+	  if(canForwardToNextHop(inFace, pitEntry, *selected)){
+		  probabilitySum+=selected->getProbability();
+		  if(randomValue<probabilitySum){
+			  this->sendInterest(pitEntry, selected->getFace(), interest);
+			  std::cout << "ZhangYu 2018-2-1 afterReceiveInterest-- "
+					  << " face: " << selected->getFace()
+					  << " cost: " << selected->getCost()
+					  << " probability: " << selected->getProbability() << std::endl;
+			  return;
+		  }
+  	  }
+  }
 
-  this->sendInterest(pitEntry, selected->getFace(), interest);
 }
 
 } // namespace fw

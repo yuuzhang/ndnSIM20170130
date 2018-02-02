@@ -136,6 +136,11 @@ public:
 static void
 addRouteHop(const std::string edgeStart,const std::string prefix, const std::string edgeEnd, std::int32_t metri);
 
+/*
+ * @ZY, 2018-1-30 add probability for the consumer node, in case of randomized rounding
+ */
+static void
+addRouteHop(const std::string edgeStart,const std::string prefix, const std::string edgeEnd, std::int32_t metri, std::double_t probability);
 
 private:
   void

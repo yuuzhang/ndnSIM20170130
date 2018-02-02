@@ -88,7 +88,8 @@ RandomLoadBalancerStrategy::afterReceiveInterest(const Face& inFace, const Inter
     const size_t randomIndex = dist(m_randomGenerator);
 
     uint64_t currentIndex = 0;
-
+    //ZhangYu 因为端口号不一定是按顺序排的，所以让端口循环，同时让序号currentIndex循环到等于随机数时选中
+    //比如选中第二个端口，得到排在nexhops中第二的端口
     for (selected = nexthops.begin(); selected != nexthops.end() && currentIndex != randomIndex;
          ++selected, ++currentIndex) {
     }

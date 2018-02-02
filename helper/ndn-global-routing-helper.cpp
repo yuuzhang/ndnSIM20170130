@@ -67,6 +67,10 @@
 //2017-8-19 try python caculate routes and add to FIB manually
 //#include "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7/Python.h"
 
+// 2018-2-2 使用boost的随机数库
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random.hpp>
+
 NS_LOG_COMPONENT_DEFINE("ndn.GlobalRoutingHelper");
 
 namespace ns3 {
@@ -618,6 +622,18 @@ void GlobalRoutingHelper::addRouteHop(const std::string edgeStart,const std::str
     //FibHelper::AddRoute(Names::Find<Node> ("Node1"), "/Node0", Names::Find<Node> ("Node4"),1);
     //FibHelper::AddRoute(Names::Find<Node> ("Node1"), "/Node0", Names::Find<Node> ("Node0"),1);
     //FibHelper::AddRoute(Names::Find<Node> ("Node0"), "/Node0", Names::Find<Node> ("Node1"),1);
+}
+// 2018-1-30 add probability for node
+void GlobalRoutingHelper::addRouteHop(const std::string edgeStart,const std::string prefix,const std::string edgeEnd, std::int32_t metric,
+		std::double_t probability)
+{
+	// ZhangYu 2018-2-1 因为浮点数的编码比较复杂，会导致处理速度慢。估计是由于这个原因在TLV格式的数据包中，只有几种不同长度的整数
+	// 为了表示端口的占用概率，或者实现带宽的分配，需要浮点数，这里采用了简单的做法，放大后取整
+	boost::random::mt19937 rng;
+    boost::uniform_01 <boost::random::mt19937&> dist(rng);
+
+    std::cout << "2018-2-2 dist: " << dist() <<" " << dist() << std::endl;
+    FibHelper::AddRoute(edgeStart, prefix, edgeEnd, metric, std::round(probability*10000));
 }
 
 } // namespace ndn

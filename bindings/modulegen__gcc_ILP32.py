@@ -212,6 +212,7 @@ def register_methods(root_module):
         cls.add_method('CalculateAllPossibleRoutes', 'void', [])
         cls.add_method('CalculateNoCommLinkMultiPathRoutesPairFirst','void',[])
         cls.add_method('addRouteHop','void',[param('const std::string&','edgeStart'),param('const std::string&','prefix'),param('const std::string&','edgeEnd'),param('int','metric')])
+        cls.add_method('addRouteHop','void',[param('const std::string&','edgeStart'),param('const std::string&','prefix'),param('const std::string&','edgeEnd'),param('int','metric'),param('double','probability')])
     reg_GlobalRoutingHelper(root_module['ns3::ndn::GlobalRoutingHelper'])
 
     def reg_Name(root_module, cls):

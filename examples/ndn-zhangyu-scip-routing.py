@@ -39,11 +39,11 @@ parser.add_argument("--vis",action="store_true",default=False)
 
 args=parser.parse_args()
 
-manualAssign=false
+manualAssign=True
 
 # ----------------仿真拓扑----------------
-#topoFileName="topo-for-CompareMultiPath.txt"
-topoFileName="22nodes-2.txt"
+topoFileName="topo-for-CompareMultiPath.txt"
+#topoFileName="22nodes-2.txt"
 topologyReader=AnnotatedTopologyReader("",20.0)
 topologyReader.SetFileName("src/ndnSIM/examples/topologies/"+topoFileName)
 nodes=topologyReader.Read()
@@ -61,8 +61,8 @@ ndnGlobalRoutingHelper.InstallAll()
 consumerList=[]
 producerList=[]
 if(manualAssign):
-    consumerList=["Node0"]
-    producerList=["Node4"]
+    consumerList=["Node0","Node0"]
+    producerList=["Node4","Node3"]
 else:
     K=int(floor(int(nodes.GetN())/2.0))
     for k in range(K):
@@ -98,19 +98,22 @@ elif args.routingName=="BestRoute":
 elif args.routingName=="MultiPathPairFirst":
     ndnGlobalRoutingHelper.CalculateNoCommLinkMultiPathRoutesPairFirst();
     for i in range(len(producerList)):
-        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/ncc")
+        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/randomized-rounding")
 elif args.routingName=="SCIP":
     routeList=mintreeMFP.caculatemaxConcurrentMFPRoute("/topologies/"+topoFileName,consumerList,producerList)
     for i in range(len(routeList)):
         ndnGlobalRoutingHelper.addRouteHop(routeList[i]['edgeStart'],routeList[i]['prefix'],routeList[i]['edgeEnd'],1)
         #print(routeList[i]['edgeStart']+','+routeList[i]['prefix']+','+routeList[i]['edgeEnd'])
     for i in range(len(producerList)):
-        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/ncc")
+        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/randomized-rounding")
 elif args.routingName=="debug":
-    ndnGlobalRoutingHelper.addRouteHop("Node0","/Node4","Node1",1);
-    ndnGlobalRoutingHelper.addRouteHop("Node1","/Node4","Node4",1);
+    ndnGlobalRoutingHelper.addRouteHop("Node0","/Node4","Node2",1,0.1);
+    ndnGlobalRoutingHelper.addRouteHop("Node2","/Node4","Node4",1,0.1);
+    ndnGlobalRoutingHelper.addRouteHop("Node0","/Node4","Node1",1,0.9);
+    ndnGlobalRoutingHelper.addRouteHop("Node1","/Node4","Node4",1,0.9);
     for i in range(len(producerList)):
-        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/ncc")
+        #ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/multicast")
+        ndn.StrategyChoiceHelper.Install(topologyReader.FindNodeFromName(consumerList[i]), "/"+producerList[i], "/localhost/nfd/strategy/randomized-rounding")
 else:
     print "Unkown routingName, try again..."
 

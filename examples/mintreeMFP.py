@@ -165,6 +165,7 @@ def readTopology(filename,cap=None):
         else:
             alineArray=str(aline).split()
             if cap is None:
+                # 这里允许节点是诸如 UCLA-A这样的名字
                 edge[str(alineArray[0]),
                      str(alineArray[1])]={'cap':re.findall(
                          "\d+",str(alineArray[2]))[0],'cost':re.findall("\d+",str(alineArray[3]))[0]}
@@ -223,13 +224,21 @@ def caculatemaxConcurrentMFPRoute(filename,consumerList,producerList):
             print('{0}={1}'.format(v.name,model.getVal(v)))
             
     x = model.data
+    edgesUsed={}
+    for(i,j) in e.keys():
+        totalTraffic=0
+        for (s,t) in d.keys():
+            totalTraffic=totalTraffic+model.getVal(x[i,j,s,t])
+        edgesUsed[i,j]={'totalTraffic':totalTraffic}
+        
     routeList=[]
+    probability=1.0
     for (s,t) in d.keys():
         for (i,j) in e.keys() :
             if(model.getVal(x[i,j,s,t])>EPS):
-                d={'edgeStart':i,'prefix':"/"+t,'edgeEnd':j}
-                routeList.append(d)
-                print('edgeUsed({0},{1})={2}'.format(i,j,model.getVal(x[i,j,s,t])))
+                r={'edgeStart':i,'edgeEnd':j,'prefix':"/"+t,'cost':1.0, 'probability':
+                   (model.getVal(x[i,j,s,t])/edgesUsed[i,j]['totalTraffic'])}
+                routeList.append(r)
     return routeList
 def caculateMaxMFPRoute(filename,consumerList,producerList):
     # Traffic Matrix d[1,5] represent interest from node 1 to node 5

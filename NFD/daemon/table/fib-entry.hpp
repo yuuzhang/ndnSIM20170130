@@ -86,6 +86,12 @@ public:
   void
   addNextHop(Face& face, uint64_t cost);
 
+  /** \ZhangYu: adds a NextHop record
+   *
+   *  2018-1-30, add the face occupied probability for randomized rounding
+   */
+  void
+  addNextHop(Face& face, uint64_t cost, uint64_t probability);
   /** \brief removes a NextHop record
    *
    *  If no NextHop record for face exists, do nothing.

@@ -38,6 +38,7 @@ enum {
   LocalControlFeature = 110,
   Origin              = 111,
   Cost                = 106,
+  Probability         = 113, //ZhangYu 2018-1-31
   Flags               = 108,
   Mask                = 112,
   Strategy            = 107,

@@ -67,6 +67,12 @@ ControlParameters::wireEncode(EncodingImpl<TAG>& encoder) const
   if (this->hasFlags()) {
     totalLength += prependNonNegativeIntegerBlock(encoder, tlv::nfd::Flags, m_flags);
   }
+  // ZhangYu 2018-1-31
+  if (this->hasProbability()){
+	totalLength += prependNonNegativeIntegerBlock(encoder, tlv::nfd::Probability, m_probability);
+    std::cout << "ZhangYu 2018-1-31 wireEncode--  m_probability:" << m_probability << std::endl;
+
+  }
   if (this->hasCost()) {
     totalLength += prependNonNegativeIntegerBlock(encoder, tlv::nfd::Cost, m_cost);
   }
@@ -162,6 +168,14 @@ ControlParameters::wireDecode(const Block& block)
   m_hasFields[CONTROL_PARAMETER_COST] = val != m_wire.elements_end();
   if (this->hasCost()) {
     m_cost = static_cast<uint64_t>(readNonNegativeInteger(*val));
+  }
+  // ZhangYu 2018-1-31
+  val = m_wire.find(tlv::nfd::Probability);
+  m_hasFields[CONTROL_PARAMETER_PROBABILITY] = val != m_wire.elements_end();
+  if (this->hasProbability()) {
+    m_probability = static_cast<uint64_t>(readNonNegativeInteger(*val));
+
+    std::cout << "ZhangYu 2018-1-31 ControlParameters::wireDecode--  m_probability:" << m_probability << std::endl;
   }
 
   val = m_wire.find(tlv::nfd::Flags);
@@ -301,6 +315,10 @@ operator<<(std::ostream& os, const ControlParameters& parameters)
 
   if (parameters.hasCost()) {
     os << "Cost: " << parameters.getCost() << ", ";
+  }
+  // ZhangYu 2018-1-31
+  if (parameters.hasProbability()) {
+    os << "Probability: " << parameters.getProbability() << ", ";
   }
 
   if (parameters.hasFlags()) {
