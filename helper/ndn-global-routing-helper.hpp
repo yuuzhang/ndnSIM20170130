@@ -110,10 +110,15 @@ public:
    */
   static void
   CalculateAllPossibleRoutes();
-    
-	/*
-	 * @ZY, back up originalMetric for all edges, using in CalculateNoCommLinkMultiPathRoutes
-	 */
+  /* ZhangYu 2018-2-28 从2014年的版本中找出来的代码加上
+   * 为了对比，修改为 k-shortest path
+   */
+  static void
+  CalculateNoCommLinkMultiPathRoutes(std::int32_t k);
+
+  /*
+  * @ZY, back up originalMetric for all edges, using in CalculateNoCommLinkMultiPathRoutes
+  */
   static void
   BackupRestoreOriginalMetrics(const std::string action);
   /*

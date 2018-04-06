@@ -56,9 +56,12 @@ Consumer::GetTypeId(void)
 
       .AddAttribute("Prefix", "Name of the Interest", StringValue("/"),
                     MakeNameAccessor(&Consumer::m_interestName), MakeNameChecker())
+	  //ZhangYu 2018-4-1 默认是2s
+					//为了去掉重传，修改为1ms
       .AddAttribute("LifeTime", "LifeTime for interest packet", StringValue("2s"),
+      //.AddAttribute("LifeTime", "LifeTime for interest packet", StringValue("0.001ms"),
                     MakeTimeAccessor(&Consumer::m_interestLifeTime), MakeTimeChecker())
-
+	  //ZhangYu 2018-4-1 默认是50ms
       .AddAttribute("RetxTimer",
                     "Timeout defining how frequent retransmission timeouts should be checked",
                     StringValue("50ms"),

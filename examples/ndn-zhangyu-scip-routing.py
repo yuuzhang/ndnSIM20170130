@@ -10,9 +10,8 @@ from ns.ndnSIM import *
 import mintreeMFP
 from ns.topology_read import TopologyReader
 import visualizer
-from Carbon.Aliases import false
-from compiler.ast import nodes
-from MA.MA import floor
+import math
+
 
 # ZhangYu 2018-1-26 添加了traffic split, randomized rounding。因为randomized rounding是需要路由计算的结果来分配的带宽的，一种方法是按照
 # NDF Developer Guide的建议保存在PIT中，这里采用了较简单的做法，直接保存在该主程序中，然后传递给自定义的NDF Strategy中
@@ -31,7 +30,8 @@ parser.add_argument("--InterestsPerSec", type=str,
                     default="300", help="Interests emit by consumer per second")
 parser.add_argument("--simulationSpan", type=int, 
                     default=200, help="Simulation span time by seconds")
-parser.add_argument("--routingName", type=str, choices=["Flooding","BestRoute","MultiPathPairFirst","SCIP","debug"], 
+parser.add_argument("--routingName", type=str, choices=["Flooding","BestRoute","k-shortest-2","k-shortest-3","MultiPathPairFirst",
+                                                        "SCIP","pyMultiPathPairFirst","pyFlooding","pyBestRoute","pyk-shortest-2","pyk-shortest-3","debug"], 
                     default="MultiPathPairFirst", 
                     help="could be Flooding, BestRoute, MultiPath, MultiPathPairFirst")
 parser.add_argument("--recordsNumber",type=int,default=100,help="total number of records in trace file")
@@ -42,14 +42,20 @@ args=parser.parse_args()
 manualAssign=True
 
 # ----------------仿真拓扑----------------
-topoFileName="topo-for-CompareMultiPath.txt"
-#topoFileName="22nodes-2.txt"
-topologyReader=AnnotatedTopologyReader("",20.0)
+#topoFileName="topo-for-CompareMultiPath.txt"
+#topoFileName="12Nodes-3.txt"
+topoFileName="8Nodes-Debug1.txt"
+topologyReader=AnnotatedTopologyReader("",2.0)
 topologyReader.SetFileName("src/ndnSIM/examples/topologies/"+topoFileName)
 nodes=topologyReader.Read()
 
 # ----------------协议加载----------------
 ndnHelper = ndn.StackHelper()
+# cs::Lru Least recently used (LRU) (default)
+# cs::Fifo First-in-first-Out (FIFO)
+# cs::Lfu Least frequently used (LFU)
+# cs::Random Random
+# cs::Nocache Policy that completely disables caching
 #ndnHelper.SetOldContentStore("ns3::ndn::cs::Lru","MaxSize","100","","","","","","")
 ndnHelper.SetOldContentStore("ns3::ndn::cs::Nocache","","","","","","","","")
 ndnHelper.InstallAll();
@@ -61,23 +67,33 @@ ndnGlobalRoutingHelper.InstallAll()
 consumerList=[]
 producerList=[]
 if(manualAssign):
-    consumerList=["Node0","Node0"]
-    producerList=["Node4","Node3"]
+    consumerList=['Node0']
+    producerList=['Node3']
 else:
-    K=int(floor(int(nodes.GetN())/2.0))
+    K=int(math.floor(int(nodes.GetN())/2.0))
     for k in range(K):
         consumerList.append(topologyReader.GetNodeName(nodes.Get(k)))
         producerList.append(topologyReader.GetNodeName(nodes.Get(k+K)))
 
 cHelper = ndn.AppHelper("ns3::ndn::ConsumerCbr")
+#cHelper= ndn.AppHelper("ns3::ndn::ConsumerZipfMandelbrot")
+#cHelper.SetAttribute("NumberOfContents", StringValue("1000")) # 10 different contents
 cHelper.SetAttribute("Frequency", StringValue(args.InterestsPerSec))
+#可以选择的有：
+#"none": no randomization
+#"uniform": uniform distribution in range (0, 1/Frequency)
+#"exponential": exponential distribution with mean 1/Frequency
+cHelper.SetAttribute("Randomize", StringValue("uniform"))
+
 pHelper = ndn.AppHelper("ns3::ndn::Producer")
 pHelper.SetAttribute("PayloadSize", StringValue("1024"));
 '''
 2017-10-17 ZhangYu 考虑到多播时的FIB，把prefix改为跟producerName相关，而不是consumerName
 '''
 for i in range(len(producerList)):
+    #if i==7:
     cHelper.SetPrefix("/"+producerList[i])
+    print consumerList[i]
     App=cHelper.Install(topologyReader.FindNodeFromName(consumerList[i]))
     #App.Start(Seconds(0.01*i));
 
@@ -94,18 +110,73 @@ if args.routingName=="Flooding":
 elif args.routingName=="BestRoute":
     ndnGlobalRoutingHelper.CalculateRoutes()
     for i in range(len(producerList)):
+        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/best-route")
+elif args.routingName=="k-shortest-2":
+    ndnGlobalRoutingHelper.CalculateNoCommLinkMultiPathRoutes(2)
+    for i in range(len(producerList)):
+        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/ncc")
+
+elif args.routingName=="k-shortest-3":
+    ndnGlobalRoutingHelper.CalculateNoCommLinkMultiPathRoutes(3)
+    for i in range(len(producerList)):
         ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/ncc")
 elif args.routingName=="MultiPathPairFirst":
     ndnGlobalRoutingHelper.CalculateNoCommLinkMultiPathRoutesPairFirst();
     for i in range(len(producerList)):
-        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/randomized-rounding")
+        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/ncc")
 elif args.routingName=="SCIP":
-    routeList=mintreeMFP.caculatemaxConcurrentMFPRoute("/topologies/"+topoFileName,consumerList,producerList)
+    lamb,routeList=mintreeMFP.caculatemaxConcurrentMFPRoute("/topologies/"+topoFileName,consumerList,producerList)
     for i in range(len(routeList)):
-        ndnGlobalRoutingHelper.addRouteHop(routeList[i]['edgeStart'],routeList[i]['prefix'],routeList[i]['edgeEnd'],1)
-        #print(routeList[i]['edgeStart']+','+routeList[i]['prefix']+','+routeList[i]['edgeEnd'])
+        ndnGlobalRoutingHelper.addRouteHop(routeList[i]['edgeStart'],routeList[i]['prefix'],routeList[i]['edgeEnd'],
+                                           routeList[i]['cost'],routeList[i]['probability'])
+        print(routeList[i]['edgeStart']+','+routeList[i]['prefix']+','+routeList[i]['edgeEnd'],
+                                           routeList[i]['cost'],routeList[i]['probability'])
+    '''
+    为了能让数据分流到多条路径，使用概率转发，以前的多路径只是让Interest多副本转发，在统计时丢弃了重复的数据，应该在除了BestRoute和Flooding之外的所有其他多路径策略中设置概率转发
+    '''
     for i in range(len(producerList)):
         ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/randomized-rounding")
+        #ndn.StrategyChoiceHelper.Install(topologyReader.FindNodeFromName(consumerList[i]), "/"+producerList[i], "/localhost/nfd/strategy/randomized-rounding")
+
+elif args.routingName=="pyMultiPathPairFirst":
+    # 前面的各种算法是多路径重复发送数据，提高可靠性的，用来统计吞吐量是不合适的，因此使用了下面的使用概率转发实现业务分离的方式，为了简单全部使用Python实现
+    maxThroughput,lamb,routeList=mintreeMFP.caculatenoCommLinkPairFirst("/topologies/"+topoFileName,consumerList,producerList)
+    for i in range(len(routeList)):
+        ndnGlobalRoutingHelper.addRouteHop(routeList[i]['edgeStart'],routeList[i]['prefix'],routeList[i]['edgeEnd'],
+                                           routeList[i]['cost'],routeList[i]['probability'])
+    for i in range(len(producerList)):
+        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/randomized-rounding")
+        print(routeList[i]['edgeStart']+','+routeList[i]['prefix']+','+routeList[i]['edgeEnd'],
+                                           routeList[i]['cost'],routeList[i]['probability'])
+elif args.routingName=="pyFlooding":
+    maxThroughput,lamb,routeList=mintreeMFP.caculateKshortest("/topologies/"+topoFileName,consumerList,producerList,10000)
+    for i in range(len(routeList)):
+        ndnGlobalRoutingHelper.addRouteHop(routeList[i]['edgeStart'],routeList[i]['prefix'],routeList[i]['edgeEnd'],
+                                           routeList[i]['cost'],routeList[i]['probability'])
+    for i in range(len(producerList)):
+        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/randomized-rounding")
+elif args.routingName=="pyBestRoute":
+    maxThroughput,lamb,routeList=mintreeMFP.caculateKshortest("/topologies/"+topoFileName,consumerList,producerList,1)
+    for i in range(len(routeList)):
+        ndnGlobalRoutingHelper.addRouteHop(routeList[i]['edgeStart'],routeList[i]['prefix'],routeList[i]['edgeEnd'],
+                                           routeList[i]['cost'],routeList[i]['probability'])
+    for i in range(len(producerList)):
+        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/randomized-rounding")
+elif args.routingName=="pyk-shortest-2":
+    maxThroughput,lamb,routeList=mintreeMFP.caculateKshortest("/topologies/"+topoFileName,consumerList,producerList,2)
+    for i in range(len(routeList)):
+        ndnGlobalRoutingHelper.addRouteHop(routeList[i]['edgeStart'],routeList[i]['prefix'],routeList[i]['edgeEnd'],
+                                           routeList[i]['cost'],routeList[i]['probability'])
+    for i in range(len(producerList)):
+        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/randomized-rounding")
+elif args.routingName=="pyk-shortest-3":
+    maxThroughput,lamb,routeList=mintreeMFP.caculateKshortest("/topologies/"+topoFileName,consumerList,producerList,3)
+    for i in range(len(routeList)):
+        ndnGlobalRoutingHelper.addRouteHop(routeList[i]['edgeStart'],routeList[i]['prefix'],routeList[i]['edgeEnd'],
+                                           routeList[i]['cost'],routeList[i]['probability'])
+    for i in range(len(producerList)):
+        ndn.StrategyChoiceHelper.InstallAll("/"+producerList[i], "/localhost/nfd/strategy/randomized-rounding")
+
 elif args.routingName=="debug":
     ndnGlobalRoutingHelper.addRouteHop("Node0","/Node4","Node2",1,0.1);
     ndnGlobalRoutingHelper.addRouteHop("Node2","/Node4","Node4",1,0.1);
@@ -116,6 +187,7 @@ elif args.routingName=="debug":
         ndn.StrategyChoiceHelper.Install(topologyReader.FindNodeFromName(consumerList[i]), "/"+producerList[i], "/localhost/nfd/strategy/randomized-rounding")
 else:
     print "Unkown routingName, try again..."
+
 
 # # To access FIB, PIT, CS, uncomment the following lines
 
@@ -146,11 +218,13 @@ Simulator.Stop(Seconds(args.simulationSpan))
 # ----------------结果记录----------------
 filename="-"+args.routingName.lower()+"-"+str(args.InterestsPerSec)+".txt"
 #filename=".txt"
-TracePerSec=args.recordsNumber
-#ndn.CsTracer.InstallAll("cs-trace"+filename, Seconds(TracePerSec))
-ndn.L3RateTracer.InstallAll("rate-trace"+filename, Seconds(TracePerSec))
-#ndn.AppDelayTracer.InstallAll("app-delays-trace"+filename)
-L2RateTracer.InstallAll("drop-trace"+filename,Seconds(TracePerSec))
+TraceSpan=args.simulationSpan/args.recordsNumber;
+if (TraceSpan<1) :
+    TraceSpan=1
+#ndn.CsTracer.InstallAll("Results/cs-trace"+filename, Seconds(TraceSpan))
+ndn.L3RateTracer.InstallAll("Results/rate-trace"+filename, Seconds(TraceSpan))
+#ndn.AppDelayTracer.InstallAll("Results/app-delays-trace"+filename)
+#L2RateTracer.InstallAll("Results/drop-trace"+filename,Seconds(TraceSpan))
 if args.vis:
     visualizer.start()
 Simulator.Run()

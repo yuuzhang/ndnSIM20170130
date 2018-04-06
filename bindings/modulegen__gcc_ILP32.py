@@ -1,3 +1,5 @@
+# if use Chinese symbol then there will be error
+
 from pybindgen import Module, FileCodeSink, param, retval, cppclass, typehandlers
 
 from pybindgen.typehandlers.smart_ptr import StdSharedPtr
@@ -196,7 +198,7 @@ def register_methods(root_module):
         cls.add_method('SetAttribute', 'void', [param('std::string', 'name'), param('const ns3::AttributeValue&', 'value')])
         cls.add_method('Install', 'ns3::ApplicationContainer', [param('ns3::NodeContainer', 'c')])
         cls.add_method('Install', 'ns3::ApplicationContainer', [param('ns3::Ptr<ns3::Node>', 'node')])
-        cls.add_method('Install', 'ns3::ApplicationContainer', [param('std::string', 'Name')])
+        cls.add_method('Install', 'ns3::ApplicationContainer', [param('std::string', 'nodeName')])
     reg_apphelper(root_module['ns3::ndn::AppHelper'])
 
     def reg_GlobalRoutingHelper(cls):
@@ -210,6 +212,8 @@ def register_methods(root_module):
         cls.add_method('AddOriginsForAll', 'void', [])
         cls.add_method('CalculateRoutes', 'void', [])
         cls.add_method('CalculateAllPossibleRoutes', 'void', [])
+        # if use  std::int32_t then there will arise error: object has no attribute CalculateNoCommLinkMultiPathRoutes
+        cls.add_method('CalculateNoCommLinkMultiPathRoutes','void',[param('int32_t', 'multipathNumber')])
         cls.add_method('CalculateNoCommLinkMultiPathRoutesPairFirst','void',[])
         cls.add_method('addRouteHop','void',[param('const std::string&','edgeStart'),param('const std::string&','prefix'),param('const std::string&','edgeEnd'),param('int','metric')])
         cls.add_method('addRouteHop','void',[param('const std::string&','edgeStart'),param('const std::string&','prefix'),param('const std::string&','edgeEnd'),param('int','metric'),param('double','probability')])

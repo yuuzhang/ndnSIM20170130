@@ -58,7 +58,7 @@ main (int argc, char *argv[])
 	bool manualAssign=true;
 	int InterestsPerSec=200;
 	int simulationSpan=200;
-	int TracePerSec=1;
+	int TraceSpan=1;
 	int recordsNumber=100;
 	string routingName="MultiPathPairFirst";
 
@@ -164,15 +164,15 @@ main (int argc, char *argv[])
 	string filename="-"+routingName+"-"+boost::lexical_cast<std::string>(InterestsPerSec)+".txt";
 	//filename=".txt";
 
-	TracePerSec=simulationSpan/recordsNumber;
-	if(TracePerSec<1)
-		TracePerSec=1;
-	ndn::CsTracer::InstallAll ("cs-trace"+filename, Seconds (TracePerSec));
-	ndn::L3RateTracer::InstallAll ("rate-trace"+filename, Seconds (TracePerSec));
+	TraceSpan=simulationSpan/recordsNumber;
+	if(TraceSpan<1)
+		TraceSpan=1;
+	ndn::CsTracer::InstallAll ("cs-trace"+filename, Seconds (TraceSpan));
+	ndn::L3RateTracer::InstallAll ("rate-trace"+filename, Seconds (TraceSpan));
 	// L3AggregateTracer disappeared in new version
 	//ndn::L3AggregateTracer::InstallAll ("aggregate-trace-"+filename, Seconds (1));
 	ndn::AppDelayTracer::InstallAll ("app-delays-trace"+filename);
-	L2RateTracer::InstallAll ("drop-trace"+filename, Seconds (TracePerSec));
+	L2RateTracer::InstallAll ("drop-trace"+filename, Seconds (TraceSpan));
 
 	Simulator::Run ();
 	Simulator::Destroy ();

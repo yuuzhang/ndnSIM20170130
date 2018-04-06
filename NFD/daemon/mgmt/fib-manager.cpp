@@ -62,7 +62,7 @@ FibManager::addNextHop(const Name& topPrefix, const Interest& interest,
   uint64_t probability=0;
   if(parameters.hasProbability()){
 	  probability=parameters.getProbability();
-	  std::cout << "ZhangYu 2018-2-1 FibManager::addNexHop probability: " << probability << std::endl;
+	  //std::cout << "ZhangYu 2018-2-1 FibManager::addNexHop probability: " << probability << std::endl;
   }
   NFD_LOG_TRACE("add-nexthop prefix: " << prefix
                 << " faceid: " << faceId

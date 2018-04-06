@@ -70,7 +70,7 @@ ControlParameters::wireEncode(EncodingImpl<TAG>& encoder) const
   // ZhangYu 2018-1-31
   if (this->hasProbability()){
 	totalLength += prependNonNegativeIntegerBlock(encoder, tlv::nfd::Probability, m_probability);
-    std::cout << "ZhangYu 2018-1-31 wireEncode--  m_probability:" << m_probability << std::endl;
+    //std::cout << "ZhangYu 2018-1-31 wireEncode--  m_probability:" << m_probability << std::endl;
 
   }
   if (this->hasCost()) {
@@ -174,8 +174,7 @@ ControlParameters::wireDecode(const Block& block)
   m_hasFields[CONTROL_PARAMETER_PROBABILITY] = val != m_wire.elements_end();
   if (this->hasProbability()) {
     m_probability = static_cast<uint64_t>(readNonNegativeInteger(*val));
-
-    std::cout << "ZhangYu 2018-1-31 ControlParameters::wireDecode--  m_probability:" << m_probability << std::endl;
+    //std::cout << "ZhangYu 2018-1-31 ControlParameters::wireDecode--  m_probability:" << m_probability << std::endl;
   }
 
   val = m_wire.find(tlv::nfd::Flags);

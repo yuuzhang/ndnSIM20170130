@@ -87,26 +87,32 @@ RandomizedRoundingStrategy::afterReceiveInterest(const Face& inFace, const Inter
     return;
   }
 
-
   boost::random::uniform_01<boost::random::mt19937&> dist(m_randomGenerator);
-  const uint64_t randomValue =std::round(dist()*10000); //和 global-routing-help中的一样
+  dist.reset();
+  //std::cout << "ZhangYu 2018-3-25 randomValue: " << dist() << std::endl;
+  const uint64_t randomValue =std::round(dist() *1000000); //和 global-routing-help中的一样
+  //std::cout << "ZhangYu 2018-3-25 randomValue: " << randomValue << std::endl;
   uint64_t probabilitySum=0;
   fib::NextHopList::const_iterator selected;	//端口变量
+  uint64_t index=0;
   for(selected=nexthops.begin(); selected !=nexthops.end(); ++selected) {
-
+	  index=index+1;
 	  if(canForwardToNextHop(inFace, pitEntry, *selected)){
 		  probabilitySum+=selected->getProbability();
 		  if(randomValue<probabilitySum){
 			  this->sendInterest(pitEntry, selected->getFace(), interest);
-			  std::cout << "ZhangYu 2018-2-1 afterReceiveInterest-- "
+			  /*
+			  std::cout << "      ZhangYu 2018-2-1 afterReceiveInterest-- "
 					  << " face: " << selected->getFace()
 					  << " cost: " << selected->getCost()
 					  << " probability: " << selected->getProbability() << std::endl;
+
+			  //std::cout << "!!ZhangYu 2018-3-25, index:" << index << std::endl;
+			  */
 			  return;
 		  }
   	  }
   }
-
 }
 
 } // namespace fw

@@ -237,8 +237,8 @@ FibHelper::AddRoute(Ptr<Node> node, const Name& prefix, shared_ptr<Face> face, i
   parameters.setProbability(probability);
   AddNextHop(parameters, node);
   //ZhangYu 2018-2-1
-  std::cout <<"2018-2-1 FibHelper::AddRoute -- probability:" << probability << std::endl;
-  std::cout << parameters << std::endl;
+  //std::cout <<"2018-2-1 FibHelper::AddRoute -- probability:" << probability << std::endl;
+  //std::cout << parameters << std::endl;
 
 }
 

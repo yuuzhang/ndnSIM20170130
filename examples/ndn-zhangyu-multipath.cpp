@@ -58,7 +58,7 @@ main (int argc, char *argv[])
 	bool manualAssign=true;
 	int InterestsPerSec=200;
 	int simulationSpan=200;
-	int TracePerSec=1;
+	int TraceSpan=1;
 	int recordsNumber=100;
 	string routingName="MultiPathPairFirst";
 
@@ -66,7 +66,7 @@ main (int argc, char *argv[])
 	CommandLine cmd;
 	cmd.AddValue("InterestsPerSec","Interests emit by consumer per second",InterestsPerSec);
 	cmd.AddValue("simulationSpan","Simulation span time by seconds",simulationSpan);
-	cmd.AddValue ("routingName", "could be Flooding, BestRoute, MultiPath, MultiPathPairFirst, debug", routingName);
+	cmd.AddValue ("routingName", "could be Flooding, BestRoute, k-shortest, MultiPathPairFirst, debug", routingName);
 	cmd.AddValue ("recordsNumber", "total number of records in tracer file", recordsNumber);
 	cmd.Parse(argc,argv);
 	//std::cout << "routingName: " << routingName << "   " << InterestsPerSec << " " << simulationSpan << std::endl;
@@ -74,7 +74,7 @@ main (int argc, char *argv[])
 	//----------------仿真拓扑----------------
 	AnnotatedTopologyReader topologyReader ("", 20);
 	//topologyReader.SetFileName ("src/ndnSIM/examples/topologies/26node-result.txt");
-	topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-for-CompareMultiPath.txt");
+	topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-for-CompareMultiPath80k.txt");
 	//topologyReader.SetFileName ("src/ndnSIM/examples/topologies/12Nodes.txt");
 	//topologyReader.SetFileName ("src/ndnSIM/examples/topologies/topo-for-xujun.txt");
 	topologyReader.Read ();
@@ -98,8 +98,8 @@ main (int argc, char *argv[])
 	std::vector<int> consumerNodes,producerNodes;
 	//生成consumer和producer的节点号动态数组
 	if(manualAssign)	{
-		int tmpConsumer[]={0};
-		int tmpProducer[]={4};
+		int tmpConsumer[]={0,1};
+		int tmpProducer[]={2,3};
 		consumerNodes.assign(tmpConsumer,tmpConsumer+sizeof(tmpConsumer)/sizeof(int));
 		producerNodes.assign(tmpProducer,tmpProducer+sizeof(tmpConsumer)/sizeof(int));
 	}
@@ -116,15 +116,20 @@ main (int argc, char *argv[])
 		consumerHelper.SetAttribute("Frequency", StringValue (boost::lexical_cast<std::string>(InterestsPerSec)));        // 100 interests a second
 		//ndn::AppHelper consumerHelper("ns3::ndn::ConsumerZipfMandelbrot");
 		//consumerHelper.SetAttribute("NumberOfContents", StringValue("100")); // 10 different contents
-		//consumerHelper.SetAttribute ("Randomize", StringValue ("uniform")); // 100 interests a second
+		//可以选择的有：
+		//"none": no randomization
+		//"uniform": uniform distribution in range (0, 1/Frequency)
+		//"exponential": exponential distribution with mean 1/Frequency
+		consumerHelper.SetAttribute("Randomize", StringValue("exponential"));
 
 		Ptr<Node> consumer1 = Names::Find<Node> ("Node"+boost::lexical_cast<std::string> (consumerNodes[i]));
 		consumerHelper.SetPrefix ("/Node"+boost::lexical_cast<std::string>(consumerNodes[i]));
 		ApplicationContainer app=consumerHelper.Install(consumer1);
 		app.Start(Seconds(0.01*i));
 		// Choosing forwarding strategy
-		ndn::StrategyChoiceHelper::InstallAll("/Node"+boost::lexical_cast<std::string> (consumerNodes[i]), "/localhost/nfd/strategy/randomized-rounding");
-		//ndn::StrategyChoiceHelper::InstallAll("/prefix", "/localhost/nfd/strategy/best-route");
+		//ndn::StrategyChoiceHelper::InstallAll("/Node"+boost::lexical_cast<std::string> (consumerNodes[i]), "/localhost/nfd/strategy/randomized-rounding");
+		//ndn::StrategyChoiceHelper::InstallAll("/Node"+boost::lexical_cast<std::string> (consumerNodes[i]), "/localhost/nfd/strategy/best-route");
+		ndn::StrategyChoiceHelper::InstallAll("/Node"+boost::lexical_cast<std::string> (consumerNodes[i]), "/localhost/nfd/strategy/ncc");
 
 		std::cout <<"ZhangYu  consumer1->GetId(): " <<consumer1->GetId() << "  prefix: /Node"+boost::lexical_cast<std::string>(consumerNodes[i]) << std::endl;
 	}
@@ -144,6 +149,9 @@ main (int argc, char *argv[])
 	// Calculate and install FIBs
 	if(routingName.compare("BestRoute")==0){
 	  ndn::GlobalRoutingHelper::CalculateRoutes ();
+	}
+	else if(routingName.compare("k-shortest")==0){
+		ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutes(2);
 	}
 	else if(routingName.compare("MultiPathPairFirst")==0){
 		ndn::GlobalRoutingHelper::CalculateNoCommLinkMultiPathRoutesPairFirst();
@@ -172,15 +180,15 @@ main (int argc, char *argv[])
 	string filename="-"+routingName+"-"+boost::lexical_cast<std::string>(InterestsPerSec)+".txt";
 	//filename=".txt";
 
-	TracePerSec=simulationSpan/recordsNumber;
-	if(TracePerSec<1)
-		TracePerSec=1;
-	ndn::CsTracer::InstallAll ("cs-trace"+filename, Seconds (TracePerSec));
-	ndn::L3RateTracer::InstallAll ("rate-trace"+filename, Seconds (TracePerSec));
+	TraceSpan=simulationSpan/recordsNumber;
+	if(TraceSpan<1)
+		TraceSpan=1;
+	ndn::CsTracer::InstallAll ("cs-trace"+filename, Seconds (TraceSpan));
+	ndn::L3RateTracer::InstallAll ("rate-trace"+filename, Seconds (TraceSpan));
 	// L3AggregateTracer disappeared in new version
 	//ndn::L3AggregateTracer::InstallAll ("aggregate-trace-"+filename, Seconds (1));
 	ndn::AppDelayTracer::InstallAll ("app-delays-trace"+filename);
-	L2RateTracer::InstallAll ("drop-trace"+filename, Seconds (TracePerSec));
+	L2RateTracer::InstallAll ("drop-trace"+filename, Seconds (TraceSpan));
 
 	Simulator::Run ();
 	Simulator::Destroy ();
